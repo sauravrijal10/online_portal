@@ -46,6 +46,8 @@ APPS = [
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',
+    "drf_api_logger",
+   
 
 ]
 INSTALLED_APPS = SYSTEM_APPS + APPS + THIRD_PARTY_APPS
@@ -59,6 +61,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
+    "online_portal.middleware.RequestLogMiddleware",
 ]
 
 ROOT_URLCONF = 'online_portal.urls'
@@ -143,7 +147,71 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# CORS_ORIGIN_ALLOW_ALL = True
+
+LOGGING_DIR = os.path.join(BASE_DIR, 'var','log')  # Change 'logs' to your desired directory
+if not os.path.exists(LOGGING_DIR):
+    os.makedirs(LOGGING_DIR)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {module} {pathname} {processName:s} {msg} {process:d} {thread:d}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "info": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            # "filename": "/var/log/online_portal.logs",
+            'filename': os.path.join(LOGGING_DIR, 'info.log'),
+            "when": "midnight",
+            "interval": 1,
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "warning": {
+            "level": "WARNING",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            # "filename": "/var/log/online_portal_warning.logs",
+            'filename': os.path.join(LOGGING_DIR, 'warning.log'),
+            "when": "midnight",
+            "interval": 1,
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "class": "django.utils.log.AdminEmailHandler",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["mail_admins", "warning"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "root": {
+            "handlers": ["console", "info", "warning"],
+            "level": "INFO",
+        },
+    },
+}# CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
 AUTH_USER_MODEL = "user.User"
