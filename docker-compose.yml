@@ -7,8 +7,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    # volumes:
+    #   - ./app:/app
     volumes:
-      - ./app:/app
+      - .:/online_portal
     env_file:
       - ./.env
     # environment:
@@ -25,14 +27,10 @@ services:
 
   db:
     image: postgres:13.0-alpine
-
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
-    # environment:
-    #   - POSTGRES_HOST=db
-    #   - POSTGRES_NAME=app
-    #   - POSTGRES_USER=postgres
-    #   - POSTGRES_PASSWORD=password
 
     ports:
       - "5432:5432"
@@ -48,4 +46,4 @@ services:
       - db
 
 volumes:
-  pgdata:
+  postgres_data:
