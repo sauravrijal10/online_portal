@@ -29,20 +29,27 @@ ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0']
 
 
 # Application definition
+SYSTEM_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    'django.contrib.sites',
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
+]
+APPS = [
     'country',
     'branch',
     'user',
+]
+THIRD_PARTY_APPS = [
+    'rest_framework',
 
 ]
+INSTALLED_APPS = SYSTEM_APPS + APPS + THIRD_PARTY_APPS
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -90,7 +97,7 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST'),
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'PASSWORD': os.environ.get('POSTGRES_PASS'),
     }
 }
 
@@ -137,9 +144,17 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
 AUTH_USER_MODEL = "user.User"
  
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'programmingthing1011@gmail.com'
+EMAIL_HOST_PASSWORD = "mwmjvczrrmmrocvg" 
+EMAIL_USE_TLS = True
