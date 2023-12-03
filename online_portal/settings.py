@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
+import logging
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +28,8 @@ SECRET_KEY = 'django-insecure-z+!*wbas2g3i87ap)g#&63)fju5k$dt0#91b#cid5@y9*ke)-9
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0']
+
+SITE_ID = 1
 
 
 # Application definition
@@ -45,9 +49,12 @@ APPS = [
     'user',
 ]
 THIRD_PARTY_APPS = [
+    "corsheaders",
     'rest_framework',
+    "rest_framework.authtoken",
     "drf_api_logger",
-   
+    'drf_yasg',
+    "rest_framework_simplejwt",
 
 ]
 INSTALLED_APPS = SYSTEM_APPS + APPS + THIRD_PARTY_APPS
@@ -60,9 +67,11 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "online_portal.middleware.RequestLogMiddleware",
+    
 ]
 
 ROOT_URLCONF = 'online_portal.urls'
@@ -148,13 +157,53 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.permissions.AllowAny",
+    ),
+}
+
+
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'SECURITY_DEFINITIONS': None,
+    'excluded_models': ['country.Country','user.User','branch.Branch'],
+   'SECURITY_DEFINITIONS': {
+      'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+   }
+}
+
 LOGGING_DIR = os.path.join(BASE_DIR, 'var','log')  # Change 'logs' to your desired directory
 if not os.path.exists(LOGGING_DIR):
     os.makedirs(LOGGING_DIR)
 
+# class ExcludeUnwantedLogs(logging.Filter):
+#     def filter(self, record):
+#         # Exclude WARNING level logs from the basehttp module
+#         return not (record.levelno == logging.WARNING and record.name.startswith('basehttp'))
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    # "filters": {
+    #     "exclude_unwanted_logs": {
+    #         "()": "__main__.ExcludeUnwantedLogs",
+    #     },
+    # },
     "formatters": {
         "verbose": {
             "format": "{asctime} {levelname} {module} {pathname} {processName:s} {msg} {process:d} {thread:d}",
@@ -174,7 +223,6 @@ LOGGING = {
         "info": {
             "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            # "filename": "/var/log/online_portal.logs",
             'filename': os.path.join(LOGGING_DIR, 'info.log'),
             "when": "midnight",
             "interval": 1,
@@ -184,13 +232,32 @@ LOGGING = {
         "warning": {
             "level": "WARNING",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            # "filename": "/var/log/online_portal_warning.logs",
             'filename': os.path.join(LOGGING_DIR, 'warning.log'),
             "when": "midnight",
             "interval": 1,
             "backupCount": 5,
             "formatter": "verbose",
+            # "filters": ["exclude_unwanted_logs"], 
         },
+        "error": {
+            "level": "ERROR",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            'filename': os.path.join(LOGGING_DIR, 'error.log'),
+            "when": "midnight",
+            "interval": 1,
+            "backupCount": 5,
+            "formatter": "verbose",
+         },
+         "application": {
+            "level": "DEBUG",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            'filename': os.path.join(LOGGING_DIR, 'application.log'),
+            "when": "midnight",
+            "interval": 1,
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+       
         "mail_admins": {
             "level": "ERROR",
             "class": "django.utils.log.AdminEmailHandler",
@@ -198,7 +265,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console"],
+            "handlers": ['console'],
             "propagate": True,
         },
         "django.request": {
@@ -206,12 +273,92 @@ LOGGING = {
             "level": "ERROR",
             "propagate": False,
         },
+        # "basehttp": {
+        #     "handlers": ["console"],  # You can adjust the handlers as needed
+        #     "level": "ERROR",  # Adjust the log level as needed
+        #     "propagate": False,
+        # },
         "root": {
-            "handlers": ["console", "info", "warning"],
+            "handlers": ["console", "warning",'application'],
             "level": "INFO",
+        },
+        "application_logger": {
+            "handlers": ["application",'console'],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }# CORS_ORIGIN_ALLOW_ALL = True
+
+# class ExcludeUnwantedLogs(logging.Filter):
+#     def filter(self, record):
+#         # Exclude log entries related to unwanted files
+#         unwanted_strings = [
+#             '/usr/local/lib/python3.9/site-packages/django/contrib/auth/migrations/',
+#             '/online_portal/user/migrations/',
+#             '/usr/local/lib/python3.9/site-packages/django/contrib/',
+#             # Add more strings as needed
+#         ]
+#         return not any(unwanted_string in record.getMessage() for unwanted_string in unwanted_strings)
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'exclude_unwanted_logs': {
+#             '()': 'online_portal.log_filters.ExcludeUnwantedLogs',
+#         },
+#     },
+#     'handlers': {
+#         'api_file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/var/log/api_calls.log',  # Specify the path to your API log file
+#         },
+#         'app_file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/var/log/application_logs.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['api_file', 'app_file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+#     'root': {
+#         'handlers': ['api_file', 'app_file'],
+#         'level': 'DEBUG',
+#     },
+#     'handlers': {
+#         'api_file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/var/log/api_calls.log',  # Specify the path to your API log file
+#         },
+#         'app_file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'var/log/application_logs.log',  # Specify the path to your application log file
+#         },
+#     },
+# }
+
+# # Add separate loggers for each app
+# for app in ['branch', 'country', 'user']:
+#     LOGGING['loggers'][app] = {
+#         'handlers': ['app_file'],
+#         'level': 'DEBUG',
+#         'propagate': True,
+#     }
+
+# Set the custom payload handler
+REST_USE_JWT = True
+JWT_AUTH = {
+    'JWT_PAYLOAD_HANDLER': 'user.utils.custom_payload_handler',
+}
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
 AUTH_USER_MODEL = "user.User"
