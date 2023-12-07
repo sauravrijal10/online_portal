@@ -7,26 +7,20 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from django.http import HttpResponse
 from rest_framework import status
-from celery import shared_task
 from .tasks import send_activation_email_async
 
 from .serializers import UserSerializer
 # from .utils import send_activation_email
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 import logging
 
-# from rest_framework_swagger.decorators import swagger_schema
 
 logger = logging.getLogger('application_logger')
 
@@ -46,32 +40,6 @@ def activate_account(request, uidb64, token):
         return HttpResponse('Account cannot be activated', status=status.HTTP_400_BAD_REQUEST) 
 
 
-# @swagger_schema(
-#     request={
-#         'parameters': [
-#             {
-#                 'name': 'limit',
-#                 'required': False,
-#                 'type': 'integer',
-#                 'in': 'query',
-#                 'description': 'The maximum number of users to return in the response.'
-#             },
-#             {
-#                 'name': 'offset',
-#                 'required': False,
-#                 'type': 'integer',
-#                 'in': 'query',
-#                 'description': 'The number of users to skip in the response.'
-#             }
-#         ]
-#     },
-#     responses={
-#         '200': {
-#             'description': 'A list of users',
-#             'schema': UserSerializer
-#         }
-#     }
-# )
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -79,8 +47,11 @@ class UserViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         password = serializer.validated_data.get('password')
-        user = User.objects.create_user(email=serializer.validated_data.get('email'), password=password)
-        # user = serializer.save()
+        user = User.objects.create_user(email=serializer.validated_data.get('email'), password=password,
+                                        first_name=serializer.validated_data.get('first_name'),
+                                        last_name=serializer.validated_data.get('last_name'),
+                                        username=serializer.validated_data.get('username')
+                                        )
         current_site_domain = '0.0.0.0:8000'
         send_activation_email_async.delay(user.id, current_site_domain)
 
