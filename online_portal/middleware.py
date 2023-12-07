@@ -1,25 +1,4 @@
-# # myapp/middleware.py
 
-# import logging
-
-# class RequestLogMiddleware:
-#     def __init__(self, get_response):
-#         self.get_response = get_response
-
-#     def __call__(self, request):
-#         # Log API endpoint information
-#         self.log_api_request(request)
-
-#         response = self.get_response(request)
-#         return response
-
-#     def log_api_request(self, request):
-#         # Customize this log format based on your requirements
-#         log_message = f"Method: {request.method}, Path: {request.path}, IP: {request.META.get('REMOTE_ADDR')}"
-
-#         # Log the message to the 'api_log' logger
-#         logger = logging.getLogger('api_log')
-#         logger.info(log_message)
 import socket
 import logging
 import traceback

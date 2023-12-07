@@ -3,4 +3,4 @@ from .models import Branch
 
 @admin.register(Branch)
 class branch_list(admin.ModelAdmin):
-    list_display = ('id', 'name','country','mobile','telephone','cr','email','website','logo')
+    list_display = ('id', 'name','country','city','mobile','telephone','cr','email','website','logo')

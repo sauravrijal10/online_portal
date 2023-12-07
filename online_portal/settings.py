@@ -47,6 +47,10 @@ APPS = [
     'country',
     'branch',
     'user',
+    'customer',
+    'invoice',
+    'customer_log',
+    'payment',
 ]
 THIRD_PARTY_APPS = [
     "corsheaders",
