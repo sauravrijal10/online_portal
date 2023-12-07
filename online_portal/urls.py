@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/customer/', include('customer.urls')),
     path('api/invoice/', include('invoice.urls')),
     path('api/payment/', include('payment.urls')),
+    path('api/customer_log/', include('customer.urls')),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
