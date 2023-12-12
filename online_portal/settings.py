@@ -40,7 +40,7 @@ SYSTEM_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'django.contrib.sites',
+    # 'django.contrib.sites',
 
 ]
 APPS = [
@@ -66,6 +66,7 @@ INSTALLED_APPS = SYSTEM_APPS + APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -362,6 +363,17 @@ REST_USE_JWT = True
 JWT_AUTH = {
     'JWT_PAYLOAD_HANDLER': 'user.utils.custom_payload_handler',
 }
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "static"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
@@ -377,3 +389,8 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'programmingthing1011@gmail.com'
 EMAIL_HOST_PASSWORD = "mwmjvczrrmmrocvg" 
 EMAIL_USE_TLS = True
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = 'AKIAVJ5WIBK3QGAYV2PC'
+AWS_SECRET_ACCESS_KEY = 'dLRLFsvvzZw29YAa+VV7kbCnZmOJQx4MlVhTVXuL'
+AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'

@@ -13,6 +13,8 @@ from django.http import HttpResponse
 from rest_framework import status
 from .tasks import send_activation_email_async
 
+
+
 from .serializers import UserSerializer
 # from .utils import send_activation_email
 
@@ -52,7 +54,9 @@ class UserViewSet(ModelViewSet):
                                         last_name=serializer.validated_data.get('last_name'),
                                         username=serializer.validated_data.get('username')
                                         )
-        current_site_domain = '0.0.0.0:8000'
+        request = self.request
+        if request:
+            current_site_domain = request.get_host()
         send_activation_email_async.delay(user.id, current_site_domain)
 
 @api_view(['POST', 'GET'])
