@@ -12,6 +12,7 @@ from django.utils.encoding import force_str
 from django.http import HttpResponse
 from rest_framework import status
 from .tasks import send_activation_email_async
+from rest_framework.exceptions import PermissionDenied
 
 
 
@@ -48,17 +49,29 @@ class UserViewSet(ModelViewSet):
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
+        is_admin = self.request.data.get('is_admin', False)       
         password = serializer.validated_data.get('password')
+        is_staff = serializer.validated_data.get('is_staff', False)
+
+        if is_admin and not self.request.user.is_superuser:
+            raise PermissionDenied("Only superusers can create an admin user.")
+        
+        if is_staff and not (self.request.user.is_admin or self.request.user.is_superuser):
+            raise PermissionDenied("Only admins or superusers can create a staff user")
+
         user = User.objects.create_user(email=serializer.validated_data.get('email'), password=password,
                                         first_name=serializer.validated_data.get('first_name'),
                                         last_name=serializer.validated_data.get('last_name'),
-                                        username=serializer.validated_data.get('username')
+                                        username=serializer.validated_data.get('username'),
+                                        is_admin=serializer.validated_data.get('is_admin'),
+                                        is_staff=is_staff,
+                                        branch=serializer.validated_data.get('branch'),
                                         )
         request = self.request
         if request:
             current_site_domain = request.get_host()
         send_activation_email_async.delay(user.id, current_site_domain)
-
+        
 @api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def user_login(request):
@@ -70,5 +83,15 @@ def user_login(request):
     return Response({"message":"user logged-in",
                       "access_token":str(refresh.access_token),
                       "refresh_token":str(refresh),
-                      "user_role": user.user_role
+                      "user_data": {
+                        "user_id": user.id,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "branch": user.branch.name,
+                        "is_active": user.is_active,
+                        "is_staff": user.is_staff,
+                        "is_admin": user.is_admin,
+                        "is_superuser": user.is_superuser,
+                        }
                       })
