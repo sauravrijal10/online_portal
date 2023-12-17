@@ -9,7 +9,8 @@ router.register('', CustomerViewSet, basename='customer')
 # router.register('get-presigned-url', get_presigned_url, basename='url')
 
 urlpatterns =[
-    path('', include(router.urls)),
     path('get-presigned-url/', get_presigned_url, name='get_presigned_url'),
+    path('', include(router.urls)),
+   
     # path('confirm-upload/', confirm_upload, name='confirm_upload'),
 ]

@@ -11,7 +11,7 @@ from rest_framework import status
 from .models import Customer
 from .serializers import CustomerSerializer
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 
 
 class CustomerViewSet(ModelViewSet):
@@ -50,11 +50,14 @@ def get_presigned_url(request):
                             #  config=Config(signature_version='s3v4'),
                             #  signature_version='s3v4',
                              region_name="ap-south-1")
+    customer_id = request.GET.get('id')
+    if customer_id is None:
+        return HttpResponseBadRequest('Parameter "customer_id" is missing')
 
     bucket_name = 'hamro-booking-images'
     image_id = str(uuid.uuid4())
 
-    object_key = f'{image_id}.pdf'
+    object_key = f'{customer_id}/{image_id}.pdf'
     presigned_url = s3_client.generate_presigned_url('put_object',
                                                      Params={'Bucket': bucket_name,
                                                              'Key': object_key},

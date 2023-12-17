@@ -9,6 +9,11 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = "__all__"
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['payment_creator'] = instance.payment_creator.email
+        return representation
+
     def validate(self, data):
         payment_type = data.get('payment_type')
         invoice_id = data.get('invoice_id')
