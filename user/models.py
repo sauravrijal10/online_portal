@@ -15,7 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(blank=False,null=False,max_length=50, unique=True)
     username = models.CharField(blank=True, null=True, max_length=50, unique=True)
     password = models.CharField(blank=False,null=False, max_length=255)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=False)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
     created_at =models.DateTimeField(auto_now_add=True,null=False)
     updated_at = models.DateTimeField(auto_now=True,null=False)
     date_joined = models.DateTimeField(default=timezone.now)
