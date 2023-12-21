@@ -2,6 +2,8 @@
 import socket
 import logging
 import traceback
+import threading
+
 logger = logging.getLogger('user.views')
 
 class RequestLogMiddleware:
@@ -28,3 +30,22 @@ class RequestLogMiddleware:
         logger.warning(msg=log_data)
 
         return response
+    
+
+# Create a thread-local variable to store the current user
+thread_local = threading.local()
+
+def get_current_user():
+    return getattr(thread_local, 'user', None)
+
+# Middleware to set the current user for the thread
+class CurrentUserMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        thread_local.user = request.user
+        response = self.get_response(request)
+        return response
+
+# Add 'path.to.CurrentUserMiddleware' to the MIDDLEWARE setting in settings.py
