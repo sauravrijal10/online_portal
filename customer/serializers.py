@@ -16,6 +16,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['customer_creator'] = instance.customer_creator.email
-        representation['invoice'] = instance.invoice.remark
+        # representation['invoice'] = instance.invoice.remark
         representation['branch'] = instance.branch.name
         return representation
+    

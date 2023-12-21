@@ -12,12 +12,11 @@ from django.utils.encoding import force_str
 from django.http import HttpResponse
 from rest_framework import status
 from .tasks import send_activation_email_async
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied,ValidationError
 
 
 
 from .serializers import UserSerializer
-# from .utils import send_activation_email
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
@@ -75,23 +74,32 @@ class UserViewSet(ModelViewSet):
 @api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def user_login(request):
-    serializer = AuthTokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.validated_data['user']
-    login(request, user)
-    refresh = RefreshToken.for_user(user)
-    return Response({"message":"user logged-in",
-                      "access_token":str(refresh.access_token),
-                      "refresh_token":str(refresh),
-                      "user_data": {
-                        "user_id": user.id,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                        "email": user.email,
-                        "branch": user.branch.name,
-                        "is_active": user.is_active,
-                        "is_staff": user.is_staff,
-                        "is_admin": user.is_admin,
-                        "is_superuser": user.is_superuser,
-                        }
-                      })
+    try:
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+        return Response({"message":"user logged-in",
+                        "access_token":str(refresh.access_token),
+                        "refresh_token":str(refresh),
+                        "user_data": {
+                            "user_id": user.id,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                            "email": user.email,
+                            "branch": user.branch.name,
+                            "is_active": user.is_active,
+                            "is_staff": user.is_staff,
+                            "is_admin": user.is_admin,
+                            "is_superuser": user.is_superuser,
+                            }
+                        })
+    except ValidationError as e:
+        error_details = e.detail
+        return Response({"error": "Validation error", "details": error_details}, status=400)
+
+        
+
+    except Exception as e:
+        return HttpResponse('This account cannot be logged in due to validation issues')

@@ -1,9 +1,14 @@
 from django.db import models
 from customer.models import Customer
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from online_portal.middleware import thread_local, get_current_user
+from user.models import User
 class Customer_log(models.Model):
-    customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     remark = models.CharField(max_length=20000)
 
     def __str__(self):
         return self.customer_id.name
+    

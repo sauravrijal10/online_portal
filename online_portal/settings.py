@@ -49,7 +49,7 @@ APPS = [
     'country',
     'branch',
     'user',
-    'customer',
+    'customer.apps.CustomerConfig',
     'invoice',
     'customer_log',
     'payment',
@@ -72,12 +72,15 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+   
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "online_portal.middleware.CurrentUserMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "online_portal.middleware.RequestLogMiddleware",
+    
     
 ]
 
