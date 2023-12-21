@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='branch',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='branch.branch'),
-            preserve_default=False,
+            field=models.ForeignKey( on_delete=django.db.models.deletion.CASCADE, to='branch.branch'),
+            # preserve_default=False,
         ),
     ]
