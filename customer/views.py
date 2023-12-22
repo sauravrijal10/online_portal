@@ -23,7 +23,18 @@ class CustomerViewSet(ModelViewSet):
     def perform_create(self, serializer):
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            customer_instance = serializer.save()
+            # user_id = self.request.user.id
+            # user_data = {
+            #     'id': user_id,
+            #     'username': self.request.user.username,
+            #     # Add other user-related fields as needed
+            # }
+
+            # serializer.save()
+            response_data = serializer.data
+            response_data['id'] = customer_instance.id  # Add the id to the response
+            return Response(response_data, status=status.HTTP_201_CREATED)
         except RequestDataTooBig as e:
             error_message = 'Request data is too big. Please upload a smaller file.'
             return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
