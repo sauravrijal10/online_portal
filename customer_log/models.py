@@ -9,6 +9,3 @@ class Customer_log(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     remark = models.CharField(max_length=20000)
 
-    def __str__(self):
-        return self.customer_id.name
-    

@@ -4,6 +4,8 @@ from rest_framework.permissions import AllowAny
 from .models import Branch
 from .serializers import BranchSerializer
 
+from online_portal.permissions import IsSuperuserOrReadOnly
+
 class BranchViewSet(ModelViewSet):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer

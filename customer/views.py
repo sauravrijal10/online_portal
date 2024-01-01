@@ -1,40 +1,69 @@
 import boto3
 import uuid
+import logging
 from django.core.exceptions import RequestDataTooBig
 
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-
+from customer_log.models import Customer_log
 from .models import Customer
 from .serializers import CustomerSerializer
 
 from django.http import JsonResponse, HttpResponseBadRequest
-# from .signals import create_customer_log
+logger = logging.getLogger(__name__)
 
 
 class CustomerViewSet(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         try:
             serializer.is_valid(raise_exception=True)
-            customer_instance = serializer.save()
-            # user_id = self.request.user.id
-            # user_data = {
-            #     'id': user_id,
-            #     'username': self.request.user.username,
-            #     # Add other user-related fields as needed
-            # }
-
-            # serializer.save()
+            user = self.request.user
+            customer_instance = serializer.save(customer_creator = user, branch=user.branch)
             response_data = serializer.data
-            response_data['id'] = customer_instance.id  # Add the id to the response
+            response_data['id'] = customer_instance.id  
             return Response(response_data, status=status.HTTP_201_CREATED)
+        except RequestDataTooBig as e:
+            error_message = 'Request data is too big. Please upload a smaller file.'
+            return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+    def perform_update(self, serializer):
+        try:
+            serializer.is_valid(raise_exception=True)
+            customer_instance = serializer.save()
+
+            previous_values = getattr(customer_instance, '_previous_values', {})
+
+            changed_data = {}
+            for field_name, previous_value in previous_values.items():
+                current_value = getattr(customer_instance, field_name)
+
+                previous_value_stripped = str(previous_value).strip().lower()
+                current_value_stripped = str(current_value).strip().lower()
+
+                if previous_value_stripped != current_value_stripped:
+                    changed_data[field_name] = {
+                        'previous': previous_value,
+                        'current': current_value,
+                    }
+
+            if changed_data:
+                current_user = self.request.user 
+                log_data = {
+                    'customer': customer_instance,
+                    'remark': ', '.join([f"{key}: {value['previous']} -> {value['current']}" for key, value in changed_data.items()]),
+                    'user': current_user if self.request.user.is_authenticated else None # Assign the User instance
+                }
+                # Create a CustomerLog instance whenever a Customer is updated
+                Customer_log.objects.create(**log_data)
+                logger.info("Log entry created.")
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except RequestDataTooBig as e:
             error_message = 'Request data is too big. Please upload a smaller file.'
             return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
@@ -59,7 +88,7 @@ def get_presigned_url(request):
                                                              'Key': object_key},
                                                      ExpiresIn=86400,
                                                      HttpMethod='PUT',
-                                                     )  # Set the expiration time in seconds
+                                                     )  
     return JsonResponse({'presigned_url': presigned_url})
 
 @api_view(['POST'])
