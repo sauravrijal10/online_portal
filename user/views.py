@@ -5,6 +5,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from django.contrib.auth import login
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.serializers import ValidationError
 
 from .models import User
 from django.utils.http import urlsafe_base64_decode
@@ -47,30 +48,35 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+
     def perform_create(self, serializer):
         is_admin = self.request.data.get('is_admin', False)       
         password = serializer.validated_data.get('password')
         is_staff = serializer.validated_data.get('is_staff', False)
-
+        branch = serializer.validated_data.get('branch')
+        
         if is_admin and not self.request.user.is_superuser:
             raise PermissionDenied("Only superusers can create an admin user.")
         
         if is_staff and not (self.request.user.is_admin or self.request.user.is_superuser):
             raise PermissionDenied("Only admins or superusers can create a staff user")
+        
+        if is_staff and branch is None:
+            raise ValidationError("Branch cannot be null for a staff user.")
 
         user = User.objects.create_user(email=serializer.validated_data.get('email'), password=password,
-                                        first_name=serializer.validated_data.get('first_name'),
-                                        last_name=serializer.validated_data.get('last_name'),
-                                        username=serializer.validated_data.get('username'),
-                                        is_admin=serializer.validated_data.get('is_admin'),
-                                        is_staff=is_staff,
-                                        branch=serializer.validated_data.get('branch'),
-                                        )
+                                            first_name=serializer.validated_data.get('first_name'),
+                                            last_name=serializer.validated_data.get('last_name'),
+                                            username=serializer.validated_data.get('username'),
+                                            is_admin=is_admin,
+                                            is_staff=is_staff,
+                                            branch=serializer.validated_data.get('branch'),
+                                            )
         request = self.request
         if request:
             current_site_domain = request.get_host()
         send_activation_email_async.delay(user.id, current_site_domain)
-        
+            
 @api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def user_login(request):
@@ -88,7 +94,7 @@ def user_login(request):
                             "first_name": user.first_name,
                             "last_name": user.last_name,
                             "email": user.email,
-                            "branch": user.branch.name,
+                            "branch": getattr(user.branch, 'name', None),
                             "is_active": user.is_active,
                             "is_staff": user.is_staff,
                             "is_admin": user.is_admin,
@@ -98,8 +104,6 @@ def user_login(request):
     except ValidationError as e:
         error_details = e.detail
         return Response({"error": "Validation error", "details": error_details}, status=400)
-
-        
 
     except Exception as e:
         return HttpResponse('This account cannot be logged in due to validation issues')
