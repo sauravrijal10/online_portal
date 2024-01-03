@@ -11,6 +11,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['customer_creator'] = instance.customer_creator.email
-        representation['branch'] = instance.branch.name
+        if instance.branch is not None:
+            representation['branch'] = instance.branch.name
+        else:
+            representation['branch'] = None
         return representation
     
