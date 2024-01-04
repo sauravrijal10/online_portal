@@ -8,11 +8,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from customer_log.models import Customer_log
 from .models import Customer
 from .serializers import CustomerSerializer
 
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, Http404
+from django.shortcuts import get_object_or_404
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,14 +36,46 @@ class CustomerViewSet(ModelViewSet):
             error_message = 'Request data is too big. Please upload a smaller file.'
             return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
     def perform_update(self, serializer):
+        print('here')
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            user = self.request.user
+            # customer_instance = get_object_or_404(Customer, pk=self.kwargs['pk'])
+            # print(f"Queryset: {customer_instance.query}")
+            queryset = Customer.objects.filter(pk=self.kwargs['pk'])
+            # queryset = self.filter_queryset(self.get_queryset()).filter()
+            # queryset = self.filter_queryset()
+            customer_instance = queryset.first()
+            print(customer_instance)
+            if not customer_instance:
+                error_message = f"Customer with ID {self.kwargs['pk']} not found."
+                return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+
+            if user.is_admin or user.is_superuser:
+                serializer.save()
+            else:
+                if customer_instance.branch != user.branch:
+                    error_message = f"Staff of branch {user.branch} cannot update customer from another branch."
+                    raise PermissionDenied(detail=error_message)
+                serializer.save()
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         except RequestDataTooBig as e:
             error_message = 'Request data is too big. Please upload a smaller file.'
             return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        except Http404 as e:
+            error_message = f"Customer with ID {self.kwargs['pk']} not found."
+            return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+        
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_admin or user.is_superuser:
+            return Customer.objects.all()
+            
+        else:
+            return Customer.objects.filter(branch=user.branch)
+            
 
 def get_presigned_url(request):
     s3_client = boto3.client('s3',
