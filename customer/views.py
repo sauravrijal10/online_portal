@@ -35,33 +35,7 @@ class CustomerViewSet(ModelViewSet):
     def perform_update(self, serializer):
         try:
             serializer.is_valid(raise_exception=True)
-            customer_instance = serializer.save()
-
-            previous_values = getattr(customer_instance, '_previous_values', {})
-
-            changed_data = {}
-            for field_name, previous_value in previous_values.items():
-                current_value = getattr(customer_instance, field_name)
-
-                previous_value_stripped = str(previous_value).strip().lower()
-                current_value_stripped = str(current_value).strip().lower()
-
-                if previous_value_stripped != current_value_stripped:
-                    changed_data[field_name] = {
-                        'previous': previous_value,
-                        'current': current_value,
-                    }
-
-            if changed_data:
-                current_user = self.request.user 
-                log_data = {
-                    'customer': customer_instance,
-                    'remark': ', '.join([f"{key}: {value['previous']} -> {value['current']}" for key, value in changed_data.items()]),
-                    'user': current_user if self.request.user.is_authenticated else None # Assign the User instance
-                }
-                # Create a CustomerLog instance whenever a Customer is updated
-                Customer_log.objects.create(**log_data)
-                logger.info("Log entry created.")
+            serializer.save()
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         except RequestDataTooBig as e:
