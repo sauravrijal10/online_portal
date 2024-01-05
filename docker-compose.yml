@@ -33,7 +33,7 @@ services:
       - ./.env
 
     ports:
-      - "5432:5432"
+      - "5431:5431"
 
   pgadmin:
     image: dpage/pgadmin4
