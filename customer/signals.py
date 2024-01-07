@@ -20,7 +20,6 @@ def capture_previous_values(sender, instance, **kwargs):
     except sender.DoesNotExist:
         return 
 
-    # instance._previous_values = {field.name: getattr(previous_instance, field.name) for field in instance._meta.fields}
     instance._previous_status = getattr(previous_instance, 'status', None)
 
 @receiver(post_save, sender=Customer)
@@ -33,7 +32,6 @@ def create_customer_log(sender, instance, **kwargs):
     logger.info(f"Signal received for Customer ID {instance.id}") 
 
     if instance.id: 
-        # previous_values = getattr(instance, '_previous_values', {})
         previous_status = getattr(instance, '_previous_status', None)
         current_status = instance.status
 
@@ -42,7 +40,7 @@ def create_customer_log(sender, instance, **kwargs):
 
         previous_status_stripped = str(previous_status).strip().lower()
         current_status_stripped = str(current_status).strip().lower()
-
+        print(previous_status)
            
         if previous_status_stripped != current_status_stripped:
             user = get_current_user()
@@ -53,7 +51,8 @@ def create_customer_log(sender, instance, **kwargs):
 
                 
             }
-            Customer_log.objects.create(**log_data)
-            logger.info("Log entry created.")
+            if previous_status != 'None':
+                Customer_log.objects.create(**log_data)
+                logger.info("Log entry created.")
     else:
         logger.warning("Signal handler conditions not met.")
