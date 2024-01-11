@@ -27,4 +27,4 @@ class IsAdminOrSuperuserOrReadOnly(permissions.BasePermission):
             return True
 
         # Allow admins or superusers to create, update, or delete brancheh
-        return request.user and (request.user.is_superuser or request.user.is_admin)
+        return request.user.is_authenticated and (request.user.is_superuser or request.user.is_admin)
