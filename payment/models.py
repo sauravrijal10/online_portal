@@ -23,7 +23,7 @@ class Payment(models.Model):
     bank_name = models.CharField(max_length=255,null=True,blank=True)
     cheque_number = models.CharField(max_length=255, null=True,blank=True)
     payment_description = models.CharField(max_length=1000)
-    payment_creator = models.ForeignKey(User,on_delete=models.CASCADE)
+    payment_creator = models.ForeignKey(User,on_delete=models.CASCADE, null=True, blank=True)
     payment_type = models.CharField(choices=((x.value,x.name.title()) for x in PaymentType),null=False,max_length=50,blank=False)
     remark = models.CharField(max_length=1000)
     invoice_id = models.ForeignKey(Invoice, on_delete=models.CASCADE)
