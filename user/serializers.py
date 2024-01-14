@@ -19,11 +19,5 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
     
-    # def validate(self, data):
-    #     is_admin=data.get('is_admin')
-    #     branch = data.get('branch')
-    #     if is_admin and User.objects.filter(branch=branch, is_admin=True).exists():
-    #         raise serializers.ValidationError({'admin user for this branch exists'})
-    #     return data
     
     

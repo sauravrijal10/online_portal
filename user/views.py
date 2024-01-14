@@ -1,46 +1,44 @@
+import logging
+
+from django.contrib.auth import login
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.http import HttpResponse
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from django.contrib.auth import login
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.serializers import ValidationError
-
-from .models import User
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
-from django.http import HttpResponse
 from rest_framework import status
-from .tasks import send_activation_email_async
 from rest_framework.exceptions import PermissionDenied,ValidationError
 
-
-
+from .models import User
 from .serializers import UserSerializer
 
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
-import logging
-
+# from .tasks import send_activation_email_async
 
 logger = logging.getLogger('application_logger')
 
 
-def activate_account(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+# def activate_account(request, uidb64, token):
+#     try:
+#         uid = force_str(urlsafe_base64_decode(uidb64))
+#         user = User.objects.get(pk=uid)
+#     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+#         user = None
 
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
-        return HttpResponse('Account has been activated', status=status.HTTP_200_OK)  
-    else:
-        return HttpResponse('Account cannot be activated', status=status.HTTP_400_BAD_REQUEST) 
+#     if user is not None and default_token_generator.check_token(user, token):
+#         user.is_active = True
+#         user.save()
+#         return HttpResponse('Account has been activated', status=status.HTTP_200_OK)  
+#     else:
+#         return HttpResponse('Account cannot be activated', status=status.HTTP_400_BAD_REQUEST) 
 
 
 class UserViewSet(ModelViewSet):
@@ -72,10 +70,10 @@ class UserViewSet(ModelViewSet):
                                             is_staff=is_staff,
                                             branch=serializer.validated_data.get('branch'),
                                             )
-        request = self.request
-        if request:
-            current_site_domain = request.get_host()
-        send_activation_email_async.delay(user.id, current_site_domain)
+        # request = self.request
+        # if request:
+        #     current_site_domain = request.get_host()
+        # send_activation_email_async.delay(user.id, current_site_domain)
             
 @api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
