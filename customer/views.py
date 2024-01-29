@@ -91,7 +91,9 @@ def get_presigned_url(request):
                                                      ExpiresIn=86400,
                                                      HttpMethod='PUT',
                                                      )  
-    return JsonResponse({'presigned_url': presigned_url})
+    return JsonResponse({'presigned_url': presigned_url,
+                         'image_id': image_id
+                         })
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

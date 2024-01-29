@@ -48,5 +48,16 @@ class PaymentSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'payment_status': 'A payment of the same type with status COMPLETED already exists for this invoice_id.'
                 })
+        if payment_status != Payment.status.COMPLETED.value:
+            completed_payment_exists = Payment.objects.filter(
+                payment_type=payment_type,
+                invoice_id=invoice_id,
+                payment_status=Payment.status.COMPLETED.value
+            ).exists()
 
+            if completed_payment_exists:
+                raise serializers.ValidationError({
+                    'payment_status': f'A payment of type {payment_type} with status COMPLETED already exists for this invoice_id.'
+                })
+            
         return data
