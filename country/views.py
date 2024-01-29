@@ -4,9 +4,9 @@ from rest_framework.permissions import AllowAny
 from .models import Country
 from .serializers import CountrySerializer
 
-from online_portal.permissions import IsAdminOrSuperuserOrReadOnly
+from online_portal.permissions import IsAdminOrSuperuser
 
 class CountryViewSet(ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
-    permission_classes = [IsAdminOrSuperuserOrReadOnly]
+    permission_classes = [IsAdminOrSuperuser]
