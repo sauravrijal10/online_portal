@@ -3,7 +3,8 @@ import uuid
 import logging
 
 from django.core.exceptions import RequestDataTooBig
-from django.http import JsonResponse, HttpResponseBadRequest, Http404
+from django.http import JsonResponse, HttpResponseBadRequest, Http404, HttpResponse
+from django.shortcuts import get_object_or_404
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,6 +17,8 @@ from customer_log.models import Customer_log
 
 from .models import Customer
 from .serializers import CustomerSerializer
+
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -90,16 +93,25 @@ def get_presigned_url(request):
                                                              'Key': object_key},
                                                      ExpiresIn=86400,
                                                      HttpMethod='PUT',
-                                                     )  
+                                                     )
     return JsonResponse({'presigned_url': presigned_url,
                          'image_id': image_id
                          })
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def confirm_upload(request):
-    serializer = CustomerSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return JsonResponse({'message': 'File uploaded successfully'})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def upload_success(request):
+    customer_id = request.GET.get('id')
+    image_id = request.GET.get('image_id')
+    if customer_id is None:
+        return HttpResponseBadRequest('Parameter "customer_id" is missing')
+    if image_id is None:
+        return HttpResponseBadRequest('Image id is missing')
+    
+    url = f'https://hamro-booking-images.s3.ap-south-1.amazonaws.com/{customer_id}/{image_id}.pdf'
+
+    customer = get_object_or_404(Customer, id=customer_id)
+
+    customer.file = url
+    customer.save()
+
+    return HttpResponse(f'file URL saved for customer with ID {customer_id}')

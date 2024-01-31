@@ -19,7 +19,7 @@ class Customer(models.Model):
     passport_number = models.CharField(max_length=255)
     applied_country = models.CharField(max_length=255)
     branch = models.ForeignKey(Branch,on_delete=models.CASCADE, blank=True, null=True)
-    file = models.CharField(max_length=10000)
+    file = models.CharField(max_length=10000, blank=True, null=True)
     invoice = models.OneToOneField(Invoice, on_delete=models.CASCADE, null=True, blank=True)
     contact = models.CharField(max_length=255)
     status = models.CharField(choices=((x.value,x.name.title()) for x in status_types),null=False,max_length=50,blank=False,default=status_types.APPLIED.value,)
