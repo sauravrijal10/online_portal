@@ -23,9 +23,9 @@ class IsAdminOrSuperuser(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Allow read-only access for any request
-        if request.method in permissions.SAFE_METHODS and (request.user.is_superuser or request.user.is_admin):
+        if request.method in permissions.SAFE_METHODS:
             return True
-
-        return False
+        
+        return request.user.is_authenticated and (request.user.is_superuser or request.user.is_admin)
         # Allow admins or superusers to create, update, or delete brancheh
         # return request.user.is_authenticated and (request.user.is_superuser or request.user.is_admin)
