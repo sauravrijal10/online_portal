@@ -3,4 +3,4 @@ from .models import Country
 
 @admin.register(Country)
 class country_list(admin.ModelAdmin):
-    list_display = ('id', 'name')
+    list_display = ('id', 'name','currency','added_by')

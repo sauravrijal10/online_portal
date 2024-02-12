@@ -1,9 +1,11 @@
 from django.db import models
-from country.models import Country
+from django.apps import apps
+# from django.contrib.auth import get_user_model
+
 
 class Branch(models.Model):
     name = models.CharField(max_length=251)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE)
+    country = models.ForeignKey('country.Country', on_delete=models.CASCADE)
     city = models.CharField(max_length=255,null=True)
     mobile = models.CharField(max_length=255)
     telephone = models.CharField(max_length=255, blank=True, null=True)
@@ -11,6 +13,9 @@ class Branch(models.Model):
     email = models.CharField(max_length=255, unique=True)
     website = models.CharField(max_length=255, blank=True, null=True)
     logo = models.CharField(max_length=255, blank=True, null=True)
+    # added_by = models.ForeignKey('user.User', on_delete=models.CASCADE, blank=True, null=True)
+
+    
 
     def __str__(self):
         return self.name
