@@ -12,6 +12,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import action
+
 
 from customer_log.models import Customer_log
 
@@ -71,6 +73,23 @@ class CustomerViewSet(ModelViewSet):
             
         else:
             return Customer.objects.filter(branch=user.branch)
+        
+    @action(detail=False, methods=['put','patch'])
+    def bulk_update_status(self, request):
+        customer_ids = request.data.get('customer_ids', [])
+        new_status = request.data.get('new_status')
+
+        if not customer_ids or not new_status:
+            return Response({'error': 'payment_ids and new_status are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payments = Customer.objects.filter(id__in=customer_ids)
+            payments.update(status=new_status)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'Bulk update successful'}, status=status.HTTP_200_OK)
+
             
 
 def get_presigned_url(request):
