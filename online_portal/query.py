@@ -61,7 +61,7 @@ def group_by_branch(request):
 
     query4 = Customer.objects.values('status', 'branch').annotate(count=Count('id')).values('status', 'branch', 'count')
 
-    query5 = Customer.objects.filter(file__isnull=False).annotate(customer_branch=F('branch')).values('branch').annotate(count=Count('id'))
+    query5 = Customer.objects.filter(file__isnull=False).annotate(customer_branch=F('branch')).annotate(month=ExtractMonth('created_at')).values('branch','month').annotate(count=Count('id'))
     response_data ={
         'Payment_Completed':list(query1),
         'Payment_Incomplete':list(query2),
